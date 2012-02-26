@@ -1,0 +1,197 @@
+package com.github.adeshmukh.ps4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.Collections2.filter;
+import static com.google.common.collect.Lists.transform;
+import static java.lang.String.format;
+import static java.util.ServiceLoader.load;
+import static java.util.concurrent.Executors.newFixedThreadPool;
+
+import java.lang.management.ManagementFactory;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import sun.jvmstat.monitor.MonitorException;
+import sun.jvmstat.monitor.MonitoredHost;
+import sun.jvmstat.monitor.VmIdentifier;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
+
+/**
+ * Entry point into the ps4j api.
+ *
+ * @author adeshmukh
+ */
+@SuppressWarnings("restriction")
+public class Ps4j implements Callable<Collection<Record>> {
+    private static final Logger log = LoggerFactory.getLogger(Ps4j.class);
+
+    private static final String VMID_TEMPLATE = "//%s?mode=r";
+
+    private static ServiceLoader<Meter> meters = load(Meter.class);
+
+    private static final Predicate<Record> NOOP_RECORDS_FILTER = new Predicate<Record>() {
+
+        @Override
+        public boolean apply(Record input) {
+            return input != Record.NOOP;
+        }
+    };
+
+    private static final Function<Future<Record>, Record> FUTURE_TO_RECORD_TRANSFORMER = new Function<Future<Record>, Record>() {
+
+        @Override
+        public Record apply(Future<Record> future) {
+            try {
+                return future.get();
+            } catch (Exception e) {
+                return Record.NOOP;
+            }
+        }
+    };
+
+    private MonitoredHost monitoredHost;
+    private Ps4jConfig config;
+    private Collection<Record> records;
+
+    public Ps4j(String hostname, Ps4jConfig config) throws Ps4jException {
+
+        checkArgument(hostname != null, "hostname cannot be null");
+        checkArgument(config != null, "config cannot be null");
+
+        try {
+            monitoredHost = MonitoredHost.getMonitoredHost(hostname);
+            this.config = config;
+        } catch (Exception e) {
+            throw new Ps4jException(e);
+        }
+    }
+
+    @Override
+    public Collection<Record> call() {
+        ExecutorService threadPool = null;
+        try {
+            // 1. Prepare input for execution
+            List<VmIdentifier> vmIds = monitoredVmIds(monitoredHost);
+            log.debug("Available vmIds: [{}]", vmIds);
+
+            // 2. Execute in threadpool
+            int numThreads = (int) (vmIds.size() * config.getConcurrencyFactor());
+            log.debug("Num threads: [{}]", numThreads);
+            threadPool = newFixedThreadPool(numThreads);
+            List<Future<Record>> results = new ArrayList<Future<Record>>(vmIds.size());
+            for (VmIdentifier vmId : vmIds) {
+                Future<Record> recordHolder = threadPool.submit(newMeasureMonitorsTask(vmId));
+                results.add(recordHolder);
+            }
+
+            // 3. Prepare and display output
+            records = filter(transform(results, FUTURE_TO_RECORD_TRANSFORMER)
+                            , NOOP_RECORDS_FILTER);
+            log.debug("Available records: [{}]", records.size());
+        } catch (Exception e) {
+            Throwables.propagate(e);
+        } finally {
+            if (threadPool != null)
+                threadPool.shutdown();
+        }
+        return records;
+    }
+
+    private Callable<Record> newMeasureMonitorsTask(VmIdentifier vmId) {
+        Collection<Meter> meters = new LinkedList<Meter>();
+        Iterables.addAll(meters, Ps4j.meters);
+        return new Ps4jTask(monitoredHost, vmId, meters);
+    }
+
+    private List<VmIdentifier> monitoredVmIds(MonitoredHost monitoredHost) throws RuntimeException {
+        List<VmIdentifier> vmIds = null;
+        try {
+
+            Integer currentVmId = currentVmId();
+
+            @SuppressWarnings("unchecked")
+            Set<Number> vmIdNums = monitoredHost.activeVms();
+            vmIds = new ArrayList<VmIdentifier>(vmIdNums.size());
+            for (Number vmId : vmIdNums) {
+                if (currentVmId.intValue() == vmId.intValue()) {
+                    continue;
+                }
+                VmIdentifier vmIdentifier = new VmIdentifier(format(VMID_TEMPLATE, vmId));
+                vmIds.add(vmIdentifier);
+            }
+        } catch (URISyntaxException ue) {
+            throw new RuntimeException(ue);
+        } catch (MonitorException me) {
+            throw new RuntimeException(me);
+        }
+        return vmIds;
+    }
+
+    private Integer currentVmId() {
+        try {
+            return Integer.parseInt(System.getProperty("sun.java.launcher.pid"));
+        } catch (Exception e1) {
+            try {
+                log.debug("currentVmId by System property failed, attempting using JMX");
+                String mxname = ManagementFactory.getRuntimeMXBean().getName();
+                return Integer.parseInt(mxname.split("@")[0]);
+            } catch (Exception e2) {
+                log.error("currentVmId by JMX failed. Returning default. Current Process may not be filtered in output");
+            }
+        }
+        return -1;
+    }
+
+    public static void main(String[] args) throws Exception {
+        Ps4jConfig config = new Ps4jConfig();
+        config.setConcurrencyFactor(1);
+        Ps4j p = new Ps4j("localhost", config);
+        display(p.call());
+    }
+
+    // HACK adeshmukh: replace this with cli module
+    private static void display(Collection<Record> records) {
+        boolean header = true;
+        for (Record record : records) {
+            SortedMap<String, ? extends Measure<?>> measures = record.getMeasures();
+            if (header) {
+                header = false;
+                boolean first = true;
+                for (String key : measures.keySet()) {
+                    if (!first) {
+                        System.out.print("\t");
+                    }
+                    System.out.print(key);
+                    first = false;
+                }
+                System.out.println();
+            }
+            boolean first = true;
+            for (String key : measures.keySet()) {
+                if (!first) {
+                    System.out.print("\t");
+                }
+                System.out.print(measures.get(key));
+                first = false;
+            }
+            System.out.println();
+        }
+    }
+
+}
