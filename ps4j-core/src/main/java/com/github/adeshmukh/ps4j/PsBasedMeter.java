@@ -24,13 +24,13 @@ import com.google.common.collect.ImmutableList;
 /**
  * A {@link Meter} implementation that relies on execution of the <code>ps</code> utility that is generall available on
  * *nix based systems.
- * 
+ *
  * @author adeshmukh
  */
 @SuppressWarnings("restriction")
 public class PsBasedMeter implements Meter {
     private static final Logger log = LoggerFactory.getLogger(PsBasedMeter.class);
-    private static final String EMPTY_VALUE = "";
+    private static final String EMPTY_VALUE = "-";
     private static final Function<String, SimpleMeasure<String>> EMPTY_MEASURE_FUNCTION = new Function<String, SimpleMeasure<String>>() {
         @Override
         public SimpleMeasure<String> apply(String name) {
