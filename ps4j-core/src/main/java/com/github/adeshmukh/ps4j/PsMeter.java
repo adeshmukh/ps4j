@@ -28,8 +28,8 @@ import com.google.common.collect.Lists;
  * @author adeshmukh
  */
 @SuppressWarnings("restriction")
-public class PsBasedMeter implements Meter {
-    private static final Logger log = LoggerFactory.getLogger(PsBasedMeter.class);
+public class PsMeter implements Meter {
+    private static final Logger log = LoggerFactory.getLogger(PsMeter.class);
     private static final String EMPTY_VALUE = "-";
 
     private static List<Metric<String>> SUPPORTED_METRICS = ImmutableList.<Metric<String>> of(

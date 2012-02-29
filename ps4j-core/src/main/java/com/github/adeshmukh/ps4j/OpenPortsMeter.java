@@ -28,8 +28,8 @@ import com.google.common.collect.Lists;
  * @author adeshmukh
  */
 @SuppressWarnings("restriction")
-public class NetworkInterfaceListingMeter implements Meter {
-    private static final Logger log = LoggerFactory.getLogger(PsBasedMeter.class);
+public class OpenPortsMeter implements Meter {
+    private static final Logger log = LoggerFactory.getLogger(PsMeter.class);
     private static final String EMPTY_VALUE = "-";
     private static final List<? extends Metric<String>> SUPPORTED_METRICS =
             singletonList(new SimpleMetric<String>("listenPorts", "ports of type TCP:LISTEN"));

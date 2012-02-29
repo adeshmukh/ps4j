@@ -23,7 +23,7 @@ import com.google.common.base.Predicate;
  * @author adeshmukh
  */
 @SuppressWarnings("restriction")
-public class HotspotMonitorsMeter implements Meter {
+public class HotspotMeter implements Meter {
 
     private static Function<Monitor, String> GET_NAME = new Function<Monitor, String>() {
         @Override
