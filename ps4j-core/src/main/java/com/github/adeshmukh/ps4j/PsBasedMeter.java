@@ -1,6 +1,5 @@
 package com.github.adeshmukh.ps4j;
 
-import static com.google.common.collect.Lists.transform;
 import static com.google.common.io.Closeables.closeQuietly;
 import static java.lang.String.valueOf;
 
@@ -20,6 +19,7 @@ import sun.jvmstat.monitor.MonitoredVm;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * A {@link Meter} implementation that relies on execution of the <code>ps</code> utility that is generall available on
@@ -31,21 +31,40 @@ import com.google.common.collect.ImmutableList;
 public class PsBasedMeter implements Meter {
     private static final Logger log = LoggerFactory.getLogger(PsBasedMeter.class);
     private static final String EMPTY_VALUE = "-";
-    private static final Function<String, SimpleMeasure<String>> EMPTY_MEASURE_FUNCTION = new Function<String, SimpleMeasure<String>>() {
-        @Override
-        public SimpleMeasure<String> apply(String name) {
-            return new SimpleMeasure<String>(name, EMPTY_VALUE);
-        }
-    };
 
-    private static List<String> PS_FORMAT_OPTIONS = ImmutableList.<String> of(
-            "etime", "lim", "logname", "majflt", "minflt", "msgrcv", "msgsnd",
-            "nswap", "ruser", "sess", "user");
+    private static List<Metric<String>> SUPPORTED_METRICS = ImmutableList.<Metric<String>> of(
+            new SimpleMetric<String>("etime", "elapsed time since the VM process started")
+            , new SimpleMetric<String>("lim", "process-level memoryuse limit")
+            , new SimpleMetric<String>("logname", "login name of user who started the session")
+            , new SimpleMetric<String>("majflt", "total page faults")
+            , new SimpleMetric<String>("minflt", "total page reclaims")
+            , new SimpleMetric<String>("msgrcv", "total messages received (reads from pipes/sockets)")
+            , new SimpleMetric<String>("msgsnd", "total messages sent (writes on pipes/sockets)")
+            );
+
+    private static List<String> PS_FORMAT_OPTIONS =
+            Lists.transform(SUPPORTED_METRICS, new Function<Metric<String>, String>() {
+                @Override
+                public String apply(Metric<String> metric) {
+                    return metric.getName();
+                }
+            });
     private static final String PS_FORMAT_OPTION = Joiner.on(',').join(PS_FORMAT_OPTIONS);
-    private static final Collection<? extends Measure<?>> EMPTY_MEASURES = transform(PS_FORMAT_OPTIONS, EMPTY_MEASURE_FUNCTION);
+    private static final List<Measure<String>> EMPTY_MEASURES =
+            Lists.transform(SUPPORTED_METRICS, new Function<Metric<String>, Measure<String>>() {
+                @Override
+                public Measure<String> apply(Metric<String> metric) {
+                    return metric.newMeasure(EMPTY_VALUE);
+                }
+            });
 
     @Override
-    public Collection<? extends Measure<?>> measures(MonitoredVm vm) {
+    public Collection<? extends Metric<?>> supportedMetrics() {
+        return SUPPORTED_METRICS;
+    }
+
+    @Override
+    public Collection<? extends Measure<?>> measureData(MonitoredVm vm) {
         int vmId = vm.getVmIdentifier().getLocalVmId();
         InputStream is = null;
         BufferedInputStream bis = null;
@@ -65,9 +84,9 @@ public class PsBasedMeter implements Meter {
             br.readLine(); // skip header
             String line = br.readLine();
             String[] parts = line.split("\\s+");
-            List<Measure<? extends Comparable<?>>> retval = new ArrayList<Measure<? extends Comparable<?>>>(PS_FORMAT_OPTIONS.size());
-            for (int i = 0, iSize = parts.length; i < iSize; i++) {
-                retval.add(new SimpleMeasure<String>(PS_FORMAT_OPTIONS.get(i), parts[i]));
+            List<Measure<?>> retval = new ArrayList<Measure<?>>(PS_FORMAT_OPTIONS.size());
+            for (int i = 0, iSize = Math.min(parts.length, SUPPORTED_METRICS.size()); i < iSize; i++) {
+                retval.add(SUPPORTED_METRICS.get(i).newMeasure(parts[i]));
             }
 
             return retval;

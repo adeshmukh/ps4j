@@ -16,7 +16,7 @@ import com.google.common.base.Throwables;
 /**
  * Task that wraps the invocations to the available {@link Meter} implementations. Used to allow concurrent execution
  * when measuring multiple VMs.
- * 
+ *
  * @author adeshmukh
  */
 @SuppressWarnings("restriction")
@@ -26,7 +26,7 @@ public class Ps4jTask implements Callable<Record> {
 
         @Override
         public String apply(Measure<?> m) {
-            return m.getName();
+            return m.getMetric().getName();
         }
     };
     private MonitoredHost monitoredHost;
@@ -47,7 +47,7 @@ public class Ps4jTask implements Callable<Record> {
             if (vm != null) {
 				Record record = Record.newInstance();
 				for (Meter ms : meters) {
-                    Collection<? extends Measure<?>> measures = ms.measures(vm);
+                    Collection<? extends Measure<?>> measures = ms.measureData(vm);
 					// TODO adeshmukh: qualify the map key with Meter's class
                     record.addAll(uniqueIndex(measures, MEASURE_NAME_FUNCTION));
 				}

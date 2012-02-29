@@ -2,6 +2,7 @@ package com.github.adeshmukh.ps4j;
 
 import static com.google.common.io.Closeables.closeQuietly;
 import static java.lang.String.valueOf;
+import static java.util.Collections.singletonList;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -9,13 +10,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import sun.jvmstat.monitor.MonitoredVm;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * A {@link Meter} implementation that uses *nix networking utilities to get port usage
@@ -27,10 +31,23 @@ import com.google.common.collect.ImmutableList;
 public class NetworkInterfaceListingMeter implements Meter {
     private static final Logger log = LoggerFactory.getLogger(PsBasedMeter.class);
     private static final String EMPTY_VALUE = "-";
-    private static final Collection<? extends Measure<?>> EMPTY_MEASURES = Collections.singleton(new SimpleMeasure<String>("portList", EMPTY_VALUE));
+    private static final List<? extends Metric<String>> SUPPORTED_METRICS =
+            singletonList(new SimpleMetric<String>("listenPorts", "ports of type TCP:LISTEN"));
+    private static final List<? extends Measure<String>> EMPTY_MEASURES =
+            Lists.transform(SUPPORTED_METRICS, new Function<Metric<String>, Measure<String>>() {
+                @Override
+                public Measure<String> apply(Metric<String> metric) {
+                    return metric.newMeasure(EMPTY_VALUE);
+                }
+            });
 
     @Override
-    public Collection<? extends Measure<?>> measures(MonitoredVm vm) {
+    public Collection<? extends Metric<?>> supportedMetrics() {
+        return SUPPORTED_METRICS;
+    }
+
+    @Override
+    public Collection<? extends Measure<?>> measureData(MonitoredVm vm) {
         int vmId = vm.getVmIdentifier().getLocalVmId();
         InputStream is = null;
         BufferedInputStream bis = null;
@@ -61,9 +78,9 @@ public class NetworkInterfaceListingMeter implements Meter {
             }
 
             if (ports.length() == 0) {
-                ports.append(EMPTY_VALUE);
+                return EMPTY_MEASURES;
             }
-            return Collections.singleton(new SimpleMeasure<String>("portList", ports.toString()));
+            return Collections.singleton(SUPPORTED_METRICS.iterator().next().newMeasure(ports.toString()));
         } catch (Exception e) {
             log.error("Error executing process", e);
             return EMPTY_MEASURES;

@@ -11,6 +11,7 @@ import java.lang.management.ManagementFactory;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -30,6 +31,7 @@ import sun.jvmstat.monitor.VmIdentifier;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 /**
@@ -38,12 +40,12 @@ import com.google.common.collect.Iterables;
  * @author adeshmukh
  */
 @SuppressWarnings("restriction")
-public class Ps4j implements Callable<Collection<Record>> {
+public class Ps4j {
     private static final Logger log = LoggerFactory.getLogger(Ps4j.class);
 
     private static final String VMID_TEMPLATE = "//%s?mode=r";
 
-    private static ServiceLoader<Meter> meters = load(Meter.class);
+    private Iterable<Meter> meters = load(Meter.class);
 
     private static final Predicate<Record> NOOP_RECORDS_FILTER = new Predicate<Record>() {
 
@@ -65,25 +67,42 @@ public class Ps4j implements Callable<Collection<Record>> {
         }
     };
 
+    private static final Comparator<Metric<?>> METRIC_NAME_COMPARATOR = new Comparator<Metric<?>>() {
+
+        @Override
+        public int compare(Metric<?> m0, Metric<?> m1) {
+            return m0.getName().compareTo(m1.getName());
+        }
+    };
+
     private MonitoredHost monitoredHost;
     private Ps4jConfig config;
     private Collection<Record> records;
 
-    public Ps4j(String hostname, Ps4jConfig config) throws Ps4jException {
+    public static enum Ps4jAction {
+        OPTIONS, MEASURE
+    }
 
-        checkArgument(hostname != null, "hostname cannot be null");
+    public Ps4j(Ps4jConfig config) throws Ps4jException {
         checkArgument(config != null, "config cannot be null");
 
         try {
-            monitoredHost = MonitoredHost.getMonitoredHost(hostname);
             this.config = config;
+            monitoredHost = MonitoredHost.getMonitoredHost(config.getHostname());
         } catch (Exception e) {
             throw new Ps4jException(e);
         }
     }
 
-    @Override
-    public Collection<Record> call() {
+    public Collection<Metric<?>> options() {
+        ImmutableSortedSet.Builder<Metric<?>> builder = ImmutableSortedSet.<Metric<?>> orderedBy(METRIC_NAME_COMPARATOR);
+        for (Meter meter : meters) {
+            builder.addAll(meter.supportedMetrics());
+        }
+        return builder.build();
+    }
+
+    public Collection<Record> measure() {
         ExecutorService threadPool = null;
         try {
             // 1. Prepare input for execution
@@ -115,8 +134,12 @@ public class Ps4j implements Callable<Collection<Record>> {
 
     private Callable<Record> newMeasureMonitorsTask(VmIdentifier vmId) {
         Collection<Meter> meters = new LinkedList<Meter>();
-        Iterables.addAll(meters, Ps4j.meters);
+        Iterables.addAll(meters, getMeters());
         return new Ps4jTask(monitoredHost, vmId, meters);
+    }
+
+    private Iterable<? extends Meter> getMeters() {
+        return meters;
     }
 
     private List<VmIdentifier> monitoredVmIds(MonitoredHost monitoredHost) throws RuntimeException {
@@ -143,7 +166,7 @@ public class Ps4j implements Callable<Collection<Record>> {
         return vmIds;
     }
 
-    private Integer currentVmId() {
+    private static Integer currentVmId() {
         try {
             return Integer.parseInt(System.getProperty("sun.java.launcher.pid"));
         } catch (Exception e1) {
@@ -156,13 +179,6 @@ public class Ps4j implements Callable<Collection<Record>> {
             }
         }
         return -1;
-    }
-
-    public static void main(String[] args) throws Exception {
-        Ps4jConfig config = new Ps4jConfig();
-        config.setConcurrencyFactor(1);
-        Ps4j p = new Ps4j("localhost", config);
-        display(p.call());
     }
 
     // HACK adeshmukh: replace this with cli module
@@ -194,4 +210,12 @@ public class Ps4j implements Callable<Collection<Record>> {
         }
     }
 
+    public static void main(String[] args) throws Exception {
+        Ps4jConfig config = new Ps4jConfig();
+        config.setConcurrencyFactor(1);
+        config.setMeters(ServiceLoader.load(Meter.class));
+        Ps4j p = new Ps4j(config);
+        display(p.measure());
+        // System.out.println(p.options());
+    }
 }

@@ -9,6 +9,7 @@
 
   <modules>
     <module>ps4j-core</module>
+    <module>ps4j-cli</module>
   </modules>
 
   <dependencyManagement>
