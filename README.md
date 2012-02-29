@@ -11,6 +11,4 @@ Usage
 =====
 Command Line
 ------------
-To view the usage options in the command line interface:
-    java -jar ps4j-core-1.0.0-SNAPSHOT.jar
-
+TODO: coming soon
