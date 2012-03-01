@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.adeshmukh.ps4j;
+package com.github.adeshmukh.ps4j.metric;
 
 import static java.lang.String.format;
 
+import com.github.adeshmukh.ps4j.Measure;
 import com.google.common.base.Preconditions;
 
 /**

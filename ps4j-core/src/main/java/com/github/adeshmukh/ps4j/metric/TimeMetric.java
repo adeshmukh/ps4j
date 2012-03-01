@@ -1,4 +1,6 @@
-package com.github.adeshmukh.ps4j;
+package com.github.adeshmukh.ps4j.metric;
+
+import com.github.adeshmukh.ps4j.Measure;
 
 
 public class TimeMetric extends SimpleMetric<Long> {

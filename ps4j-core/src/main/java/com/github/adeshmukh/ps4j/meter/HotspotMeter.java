@@ -1,4 +1,4 @@
-package com.github.adeshmukh.ps4j;
+package com.github.adeshmukh.ps4j.meter;
 
 import static com.google.common.collect.Collections2.filter;
 import static com.google.common.collect.Lists.transform;
@@ -14,6 +14,12 @@ import java.util.Map;
 import sun.jvmstat.monitor.Monitor;
 import sun.jvmstat.monitor.MonitoredVm;
 
+import com.github.adeshmukh.ps4j.Measure;
+import com.github.adeshmukh.ps4j.Meter;
+import com.github.adeshmukh.ps4j.Metric;
+import com.github.adeshmukh.ps4j.metric.AutoScalingMetric;
+import com.github.adeshmukh.ps4j.metric.SimpleMetric;
+import com.github.adeshmukh.ps4j.metric.TimeMetric;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 

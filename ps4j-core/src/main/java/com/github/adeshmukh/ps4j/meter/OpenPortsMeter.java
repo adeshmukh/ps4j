@@ -1,14 +1,15 @@
-package com.github.adeshmukh.ps4j;
+package com.github.adeshmukh.ps4j.meter;
 
 import static com.google.common.io.Closeables.closeQuietly;
 import static java.lang.String.valueOf;
+import static java.util.Collections.singletonList;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -16,41 +17,27 @@ import org.slf4j.LoggerFactory;
 
 import sun.jvmstat.monitor.MonitoredVm;
 
+import com.github.adeshmukh.ps4j.Measure;
+import com.github.adeshmukh.ps4j.Meter;
+import com.github.adeshmukh.ps4j.Metric;
+import com.github.adeshmukh.ps4j.metric.SimpleMetric;
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
- * A {@link Meter} implementation that relies on execution of the <code>ps</code> utility that is generall available on
- * *nix based systems.
+ * A {@link Meter} implementation that uses *nix networking utilities to get port usage
+ * by the specified JVM.
  *
  * @author adeshmukh
  */
 @SuppressWarnings("restriction")
-public class PsMeter implements Meter {
+public class OpenPortsMeter implements Meter {
     private static final Logger log = LoggerFactory.getLogger(PsMeter.class);
     private static final String EMPTY_VALUE = "-";
-
-    private static List<Metric<String>> SUPPORTED_METRICS = ImmutableList.<Metric<String>> of(
-            new SimpleMetric<String>("etime", "elapsed time since the VM process started")
-            , new SimpleMetric<String>("lim", "process-level memoryuse limit")
-            , new SimpleMetric<String>("logname", "login name of user who started the session")
-            , new SimpleMetric<String>("majflt", "total page faults")
-            , new SimpleMetric<String>("minflt", "total page reclaims")
-            , new SimpleMetric<String>("msgrcv", "total messages received (reads from pipes/sockets)")
-            , new SimpleMetric<String>("msgsnd", "total messages sent (writes on pipes/sockets)")
-            );
-
-    private static List<String> PS_FORMAT_OPTIONS =
-            Lists.transform(SUPPORTED_METRICS, new Function<Metric<String>, String>() {
-                @Override
-                public String apply(Metric<String> metric) {
-                    return metric.getName();
-                }
-            });
-    private static final String PS_FORMAT_OPTION = Joiner.on(',').join(PS_FORMAT_OPTIONS);
-    private static final List<Measure<String>> EMPTY_MEASURES =
+    private static final List<? extends Metric<String>> SUPPORTED_METRICS =
+            singletonList(new SimpleMetric<String>("listenPorts", "ports of type TCP:LISTEN"));
+    private static final List<? extends Measure<String>> EMPTY_MEASURES =
             Lists.transform(SUPPORTED_METRICS, new Function<Metric<String>, Measure<String>>() {
                 @Override
                 public Measure<String> apply(Metric<String> metric) {
@@ -72,8 +59,9 @@ public class PsMeter implements Meter {
         BufferedReader br = null;
         try {
             ProcessBuilder pbuilder = new ProcessBuilder();
-            pbuilder.command(ImmutableList.<String> of("ps"
-                    , "-o", PS_FORMAT_OPTION
+            pbuilder.command(ImmutableList.<String> of("lsof" // lsof -a -p 7605 -iTCP -sTCP:LISTEN -P -F n
+                    , "-a"
+                    , "-iTCP", "-sTCP:LISTEN", "-P", "-F", "n"
                     , "-p", valueOf(vmId)));
             Process ps = pbuilder.start();
             is = ps.getInputStream();
@@ -81,15 +69,22 @@ public class PsMeter implements Meter {
             isr = new InputStreamReader(bis);
             br = new BufferedReader(isr);
 
-            br.readLine(); // skip header
-            String line = br.readLine();
-            String[] parts = line.split("\\s+");
-            List<Measure<?>> retval = new ArrayList<Measure<?>>(PS_FORMAT_OPTIONS.size());
-            for (int i = 0, iSize = Math.min(parts.length, SUPPORTED_METRICS.size()); i < iSize; i++) {
-                retval.add(SUPPORTED_METRICS.get(i).newMeasure(parts[i]));
+            br.readLine(); // skip process id field
+            boolean first = false;
+            StringBuilder ports = new StringBuilder();
+            for (String line = br.readLine(); line != null; line = br.readLine()) {
+                ports.append(line.substring(1));
+                if (!first) {
+                    ports.append(",");
+                } else {
+                    first = false;
+                }
             }
 
-            return retval;
+            if (ports.length() == 0) {
+                return EMPTY_MEASURES;
+            }
+            return Collections.singleton(SUPPORTED_METRICS.iterator().next().newMeasure(ports.toString()));
         } catch (Exception e) {
             log.error("Error executing process", e);
             return EMPTY_MEASURES;

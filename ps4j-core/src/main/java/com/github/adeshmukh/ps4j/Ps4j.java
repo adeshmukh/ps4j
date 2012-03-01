@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Collections2.filter;
 import static com.google.common.collect.Lists.transform;
 import static java.lang.String.format;
-import static java.util.ServiceLoader.load;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
 import java.lang.management.ManagementFactory;
@@ -42,8 +41,6 @@ public class Ps4j {
     private static final Logger log = LoggerFactory.getLogger(Ps4j.class);
 
     private static final String VMID_TEMPLATE = "//%s?mode=r";
-
-    private Iterable<Meter> meters = load(Meter.class);
 
     private static final Predicate<Record> NOOP_RECORDS_FILTER = new Predicate<Record>() {
 
@@ -94,7 +91,7 @@ public class Ps4j {
 
     public Collection<Metric<?>> options() {
         ImmutableSortedSet.Builder<Metric<?>> builder = ImmutableSortedSet.<Metric<?>> orderedBy(METRIC_NAME_COMPARATOR);
-        for (Meter meter : meters) {
+        for (Meter meter : config.getMeters()) {
             builder.addAll(meter.supportedMetrics());
         }
         return builder.build();
@@ -132,12 +129,8 @@ public class Ps4j {
 
     private Callable<Record> newMeasureMonitorsTask(VmIdentifier vmId) {
         Collection<Meter> meters = new LinkedList<Meter>();
-        Iterables.addAll(meters, getMeters());
+        Iterables.addAll(meters, config.getMeters());
         return new Ps4jTask(monitoredHost, vmId, meters);
-    }
-
-    private Iterable<? extends Meter> getMeters() {
-        return meters;
     }
 
     private List<VmIdentifier> monitoredVmIds(MonitoredHost monitoredHost) throws RuntimeException {

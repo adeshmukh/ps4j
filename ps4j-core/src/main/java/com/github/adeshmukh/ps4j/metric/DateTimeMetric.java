@@ -1,7 +1,9 @@
-package com.github.adeshmukh.ps4j;
+package com.github.adeshmukh.ps4j.metric;
 
 import java.text.DateFormat;
 import java.util.Date;
+
+import com.github.adeshmukh.ps4j.Measure;
 
 public class DateTimeMetric extends SimpleMetric<Date> {
 

@@ -1,9 +1,10 @@
 package com.github.adeshmukh.ps4j.cli;
 
 import static com.google.common.collect.Lists.transform;
+import static java.lang.Class.forName;
 import static java.util.Arrays.asList;
 
-import java.util.ServiceLoader;
+import java.lang.reflect.Method;
 
 import org.kohsuke.args4j.Option;
 
@@ -19,7 +20,6 @@ public class Ps4jConfigCli {
 
     private static final Function<String, Meter> CONSTRUCTOR =
             new Function<String, Meter>() {
-                @Override
                 public Meter apply(String className) {
                     try {
                         return (Meter) Class.forName(className.trim()).newInstance();
@@ -50,9 +50,28 @@ public class Ps4jConfigCli {
         if (!Strings.isNullOrEmpty(metersCsv)) {
             config.setMeters(transform(asList(metersCsv.split(",")), CONSTRUCTOR));
         } else { // Auto discover all meters using ServiceLoader
-            config.setMeters(ServiceLoader.<Meter> load(Meter.class));
+            config.setMeters(discoverMeters());
         }
         return config;
+    }
+
+    /**
+     * Use reflection to see if ServiceLoader is available (ServiceLoader requires JDK1.6+).
+     * If ServiceLoader is not available, then the Meters cannot be autodiscovered.
+     *
+     * @return
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static Iterable<? extends Meter> discoverMeters() {
+        Iterable<Meter> meters = null;
+        try {
+            Class serviceLoader = forName("java.util.ServiceLoader");
+            Method m = serviceLoader.getMethod("load", Class.class);
+            meters = (Iterable) m.invoke(serviceLoader, Meter.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return meters;
     }
 
     public boolean isHelp() {

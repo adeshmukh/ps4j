@@ -1,5 +1,7 @@
-package com.github.adeshmukh.ps4j;
+package com.github.adeshmukh.ps4j.metric;
 
+import com.github.adeshmukh.ps4j.Measure;
+import com.github.adeshmukh.ps4j.Metric;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
