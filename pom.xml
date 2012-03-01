@@ -6,18 +6,51 @@
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ps4j-parent</name>
+  <description>PS4J api and tool to list attributes of JVM processes</description>
 
   <modules>
     <module>ps4j-core</module>
     <module>ps4j-cli</module>
   </modules>
+  
+  <developers>
+    <developer>
+      <id>adeshmukh</id>
+      <name>Amol S Deshmukh</name>
+      <url>http://adeshmukh.github.com</url>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <timezone>-8</timezone>
+    </developer>
+  </developers>
+  
+  <scm>
+    <connection>scm:git:git@github.com/adeshmukh/${project.artifactId}.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/adeshmukh/${project.artifactId}.git</developerConnection>
+  </scm>
+  
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://opensource.org/licenses/Apache-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  
+  <distributionManagement>
+    <site>
+      <id>github-pages</id>
+      <url>gitsite:git@github.com/adeshmukh/${project.artifactId}.git</url>
+    </site>
+  </distributionManagement>
 
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>11.0.1</version>
+        <version>11.0.2</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
