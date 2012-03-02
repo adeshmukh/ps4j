@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <appender name="LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>ps4j.log</file>
+    <layout class="ch.qos.logback.classic.PatternLayout">
+      <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+    </layout>
+  </appender>
+  <logger name="com.github.adeshmukh" level="DEBUG"/>
+  <root level="WARN">
+    <appender-ref ref="LOG" />
+  </root>
+</configuration>

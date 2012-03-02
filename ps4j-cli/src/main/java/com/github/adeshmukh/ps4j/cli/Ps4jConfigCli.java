@@ -20,11 +20,16 @@ public class Ps4jConfigCli {
 
     private static final Function<String, Meter> CONSTRUCTOR =
             new Function<String, Meter>() {
+                @Override
                 public Meter apply(String className) {
                     try {
                         return (Meter) Class.forName(className.trim()).newInstance();
-                    } catch (Exception e) {
-                        return null;
+                    } catch (InstantiationException e) {
+                        throw new MeterLoadingException(e);
+                    } catch (IllegalAccessException e) {
+                        throw new MeterLoadingException(e);
+                    } catch (ClassNotFoundException e) {
+                        throw new MeterLoadingException(e);
                     }
                 }
             };
@@ -46,11 +51,17 @@ public class Ps4jConfigCli {
 
     public Ps4jConfig buildConfig() {
         Ps4jConfig config = new Ps4jConfig();
+
         config.setConcurrencyFactor(concurrencyFactor);
+
         if (!Strings.isNullOrEmpty(metersCsv)) {
             config.setMeters(transform(asList(metersCsv.split(",")), CONSTRUCTOR));
         } else { // Auto discover all meters using ServiceLoader
             config.setMeters(discoverMeters());
+        }
+
+        if (outputFields != null) {
+            config.setMeasureNames(outputFields.split(","));
         }
         return config;
     }
@@ -64,12 +75,13 @@ public class Ps4jConfigCli {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static Iterable<? extends Meter> discoverMeters() {
         Iterable<Meter> meters = null;
+        Class serviceLoader;
         try {
-            Class serviceLoader = forName("java.util.ServiceLoader");
+            serviceLoader = forName("java.util.ServiceLoader");
             Method m = serviceLoader.getMethod("load", Class.class);
             meters = (Iterable) m.invoke(serviceLoader, Meter.class);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new MeterLoadingException(e);
         }
         return meters;
     }

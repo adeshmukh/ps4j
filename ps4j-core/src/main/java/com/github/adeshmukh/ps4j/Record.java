@@ -27,8 +27,9 @@ public class Record {
 		return new Record();
 	}
 
-    public void addAll(Map<String, ? extends Measure<?>> measures) {
+    public Record addAll(Map<String, ? extends Measure<?>> measures) {
         this.measures.putAll(measures);
+        return this;
 	}
 
     public SortedMap<String, ? extends Measure<?>> getMeasures() {

@@ -11,4 +11,7 @@ public class Ps4jException extends RuntimeException {
         super(e);
     }
 
+    public Ps4jException(String message) {
+        super(message);
+    }
 }

@@ -18,6 +18,8 @@ public final class Ps4jConfig {
 
     private Iterable<? extends Meter> meters;
 
+    private String[] measureNames;
+
     public Iterable<? extends Meter> getMeters() {
         return meters;
     }
@@ -48,5 +50,13 @@ public final class Ps4jConfig {
     public void setConcurrencyFactor(double cf) {
         Preconditions.checkArgument(cf >= 0 && cf <= 1, "concurrencyFactor must be in the range (0,1)");
         this.concurrencyFactor = cf;
+    }
+
+    public String[] getMetricNames() {
+        return measureNames;
+    }
+
+    public void setMeasureNames(String[] measureNames) {
+        this.measureNames = measureNames;
     }
 }

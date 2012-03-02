@@ -5,7 +5,7 @@
   <artifactId>ps4j-parent</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>ps4j-parent</name>
+  <name>ps4j</name>
   <description>PS4J api and tool to list attributes of JVM processes</description>
 
   <modules>
@@ -26,8 +26,8 @@
   </developers>
   
   <scm>
-    <connection>scm:git:git@github.com/adeshmukh/${project.artifactId}.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/adeshmukh/${project.artifactId}.git</developerConnection>
+    <connection>scm:git:git@github.com/adeshmukh/${project.name}.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/adeshmukh/${project.name}.git</developerConnection>
   </scm>
   
   <licenses>
@@ -41,7 +41,7 @@
   <distributionManagement>
     <site>
       <id>github-pages</id>
-      <url>gitsite:git@github.com/adeshmukh/${project.artifactId}.git</url>
+      <url>gitsite:git@github.com/adeshmukh/${project.name}.git</url>
     </site>
   </distributionManagement>
 
@@ -52,16 +52,11 @@
         <artifactId>guava</artifactId>
         <version>11.0.2</version>
       </dependency>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>1.6.4</version>
-      </dependency>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-simple</artifactId>
-        <version>1.6.4</version>
-      </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.0.0</version>
+    </dependency>
     <dependency>
       <groupId>args4j</groupId>
       <artifactId>args4j</artifactId>

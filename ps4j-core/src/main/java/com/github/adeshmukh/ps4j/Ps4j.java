@@ -2,13 +2,16 @@ package com.github.adeshmukh.ps4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Collections2.filter;
-import static com.google.common.collect.Lists.transform;
+import static com.google.common.collect.Collections2.transform;
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.filterKeys;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
 import java.lang.management.ManagementFactory;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -26,8 +29,8 @@ import sun.jvmstat.monitor.MonitoredHost;
 import sun.jvmstat.monitor.VmIdentifier;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -38,6 +41,21 @@ import com.google.common.collect.Iterables;
  */
 @SuppressWarnings("restriction")
 public class Ps4j {
+
+    private final Predicate<String> METRICS_FILTER = new Predicate<String>() {
+        @Override
+        public boolean apply(String input) {
+            return config.getMetricNames() == null || Arrays.asList(config.getMetricNames()).contains(input);
+        }
+    };
+
+    private final Function<Record, Record> RECORD_STRAINER = new Function<Record, Record>() {
+        @Override
+        public Record apply(Record input) {
+            return Record.newInstance().addAll(filterKeys(input.getMeasures(), METRICS_FILTER));
+        }
+    };
+
     private static final Logger log = LoggerFactory.getLogger(Ps4j.class);
 
     private static final String VMID_TEMPLATE = "//%s?mode=r";
@@ -70,6 +88,13 @@ public class Ps4j {
         }
     };
 
+    private static final Function<Metric<?>, String> GET_NAME = new Function<Metric<?>, String>() {
+        @Override
+        public String apply(Metric<?> metric) {
+            return metric.getName();
+        }
+    };
+
     private MonitoredHost monitoredHost;
     private Ps4jConfig config;
     private Collection<Record> records;
@@ -89,15 +114,26 @@ public class Ps4j {
         }
     }
 
-    public Collection<Metric<?>> options() {
+    public Collection<Metric<?>> options() throws Ps4jException {
         ImmutableSortedSet.Builder<Metric<?>> builder = ImmutableSortedSet.<Metric<?>> orderedBy(METRIC_NAME_COMPARATOR);
         for (Meter meter : config.getMeters()) {
             builder.addAll(meter.supportedMetrics());
         }
-        return builder.build();
+        Set<Metric<?>> retval = builder.build();
+        String[] metricNames = config.getMetricNames();
+        if (metricNames != null && metricNames.length > 0) {
+            List<String> badMetrics = newArrayList(metricNames);
+            badMetrics.removeAll(transform(retval, GET_NAME));
+            if (!badMetrics.isEmpty()) {
+                throw new Ps4jException("Invalid metrics specified: " + Joiner.on(",").join(badMetrics));
+            }
+        }
+        return retval;
     }
 
-    public Collection<Record> measure() {
+    public Collection<Record> measure() throws Ps4jException {
+        options(); // validate config.getMetricNames()
+
         ExecutorService threadPool = null;
         try {
             // 1. Prepare input for execution
@@ -115,11 +151,12 @@ public class Ps4j {
             }
 
             // 3. Prepare and display output
-            records = filter(transform(results, FUTURE_TO_RECORD_TRANSFORMER)
-                            , NOOP_RECORDS_FILTER);
+            records = transform(
+                    filter(transform(results, FUTURE_TO_RECORD_TRANSFORMER), NOOP_RECORDS_FILTER)
+                    , RECORD_STRAINER);
             log.debug("Available records: [{}]", records.size());
         } catch (Exception e) {
-            Throwables.propagate(e);
+            throw new Ps4jException(e);
         } finally {
             if (threadPool != null)
                 threadPool.shutdown();

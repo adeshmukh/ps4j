@@ -1,6 +1,7 @@
 package com.github.adeshmukh.ps4j.meter;
 
 import static com.google.common.collect.Collections2.filter;
+import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static com.google.common.collect.Maps.transformValues;
 import static com.google.common.collect.Maps.uniqueIndex;
@@ -431,11 +432,29 @@ public class HotspotMeter implements Meter {
         public abstract Long value(Map<String, Number> m);
     }
 
-    private static final List<Metric<? extends Comparable<?>>> SUPPORTED_METRICS =
+    private static final List<Metric<? extends Comparable<?>>> DOUBLE_METRICS =
             transform(asList(DoubleMetricMonitor.values())
                     , new Function<DoubleMetricMonitor, Metric<? extends Comparable<?>>>() {
                         @Override
                         public Metric<? extends Comparable<?>> apply(DoubleMetricMonitor metricMonitor) {
+                            return metricMonitor.metric();
+                        }
+                    });
+
+    private static final List<Metric<? extends Comparable<?>>> TIME_METRICS =
+            transform(asList(TimeMetricMonitor.values())
+                    , new Function<TimeMetricMonitor, Metric<? extends Comparable<?>>>() {
+                        @Override
+                        public Metric<? extends Comparable<?>> apply(TimeMetricMonitor metricMonitor) {
+                            return metricMonitor.metric();
+                        }
+                    });
+
+    private static final List<Metric<? extends Comparable<?>>> STRING_METRICS =
+            transform(asList(StringMetricMonitor.values())
+                    , new Function<StringMetricMonitor, Metric<? extends Comparable<?>>>() {
+                        @Override
+                        public Metric<? extends Comparable<?>> apply(StringMetricMonitor metricMonitor) {
                             return metricMonitor.metric();
                         }
                     });
@@ -449,7 +468,11 @@ public class HotspotMeter implements Meter {
 
     @Override
     public Collection<Metric<? extends Comparable<?>>> supportedMetrics() {
-        return SUPPORTED_METRICS;
+        Collection<Metric<? extends Comparable<?>>> retval = newArrayList();
+        retval.addAll(DOUBLE_METRICS);
+        retval.addAll(TIME_METRICS);
+        retval.addAll(STRING_METRICS);
+        return retval;
     }
 
     @Override
