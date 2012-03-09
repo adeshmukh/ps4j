@@ -3,5 +3,5 @@ target
 .classpath
 .project
 .settings
-clean+install.log
+clean*install.log
 ghpush

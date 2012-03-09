@@ -5,14 +5,12 @@ import static java.lang.System.exit;
 import static java.lang.System.out;
 
 import java.util.Collection;
-import java.util.SortedMap;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.adeshmukh.ps4j.Measure;
 import com.github.adeshmukh.ps4j.Metric;
 import com.github.adeshmukh.ps4j.Ps4j;
 import com.github.adeshmukh.ps4j.Ps4jException;
@@ -64,30 +62,10 @@ public class Main {
         }
     }
 
-    // HACK adeshmukh: replace this with cli module
     private static void display(Collection<Record> records) {
-        boolean header = true;
-        for (Record record : records) {
-            SortedMap<String, ? extends Measure<?>> measures = record.getMeasures();
-            if (header) {
-                header = false;
-                boolean first = true;
-                for (String key : measures.keySet()) {
-                    if (!first) {
-                        out.print("\t");
-                    }
-                    out.print(key);
-                    first = false;
-                }
-                out.println();
-            }
-            boolean first = true;
-            for (String key : measures.keySet()) {
-                if (!first) {
-                    out.print("\t");
-                }
-                out.print(measures.get(key));
-                first = false;
+        for (String[] values : new DisplayRecords(records)) {
+            for (String value : values) {
+                out.print(value);
             }
             out.println();
         }
