@@ -5,7 +5,6 @@ import static com.google.common.base.Strings.padStart;
 import static java.lang.Math.max;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -14,6 +13,7 @@ import java.util.SortedMap;
 import com.github.adeshmukh.ps4j.Measure;
 import com.github.adeshmukh.ps4j.Record;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class DisplayRecords implements Iterable<String[]> {
 
@@ -27,8 +27,8 @@ public class DisplayRecords implements Iterable<String[]> {
     private List<String[]> displayValues;
     private List<String> orderedKeys;
 
-    DisplayRecords(Collection<Record> records) {
-        if (records.isEmpty()) {
+    DisplayRecords(Iterable<Record> records) {
+        if (Iterables.isEmpty(records)) {
             return;
         }
         // get the measures in the first record to size the record
@@ -37,7 +37,7 @@ public class DisplayRecords implements Iterable<String[]> {
         numCols = orderedKeys.size();
 
         colWidths = new int[numCols];
-        numRecords = records.size();
+        numRecords = Iterables.size(records);
         displayValues = new ArrayList<String[]>(numRecords);
 
         // populate colWidths

@@ -62,7 +62,7 @@ public class Main {
         }
     }
 
-    private static void display(Collection<Record> records) {
+    private static void display(Iterable<Record> records) {
         for (String[] values : new DisplayRecords(records)) {
             for (String value : values) {
                 out.print(value);

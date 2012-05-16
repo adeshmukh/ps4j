@@ -1,17 +1,18 @@
 package com.github.adeshmukh.ps4j.cli;
 
-import static com.google.common.collect.Lists.transform;
 import static java.lang.Class.forName;
 import static java.util.Arrays.asList;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 import com.github.adeshmukh.ps4j.Meter;
 import com.github.adeshmukh.ps4j.Ps4jConfig;
 import com.google.common.base.Function;
-import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 
 /**
  * @author adeshmukh
@@ -38,13 +39,13 @@ public class Ps4jConfigCli {
             , usage = "concurrency factor in the range (0,1), default=1. Controls the scaling of threads to the number of VMs available.")
     private double concurrencyFactor = 1;
 
-    @Option(name = "-m", aliases = "--meters"
-            , usage = "Comma separate list of Meter class names to instantiate. Defaults to using auto-discovery to find all available Meters.")
-    private String metersCsv;
+    @Option(name = "-m", aliases = "--meters", handler = StringArrayOptionHandler.class
+            , usage = "Names of one or more meters to be used. Defaults to using auto-discovery to find all available Meters.")
+    private String[] meters;
 
-    @Option(name = "-o", aliases = "--fields"
-            , usage = "Comma separated list of fields to display in output, defaults to all. The specified fields are displayed only if the corresponding Meter is also enabled.")
-    private String outputFields;
+    @Option(name = "-o", aliases = "--fields", handler = StringArrayOptionHandler.class
+            , usage = "List of fields to display in output, defaults to all. The specified fields are displayed only if the corresponding Meter is also enabled.")
+    private String[] outputFields;
 
     @Option(name = "-h", aliases = { "--help", "-?" }, usage = "Help. Specify -m <CSV list of Meters> to get a list of available fields")
     private boolean help = false;
@@ -54,14 +55,14 @@ public class Ps4jConfigCli {
 
         config.setConcurrencyFactor(concurrencyFactor);
 
-        if (!Strings.isNullOrEmpty(metersCsv)) {
-            config.setMeters(transform(asList(metersCsv.split(",")), CONSTRUCTOR));
-        } else { // Auto discover all meters using ServiceLoader
+        if (meters == null) {
             config.setMeters(discoverMeters());
+        } else { // Auto discover all meters using ServiceLoader
+            config.setMeters(FluentIterable.from(asList(meters)).transform(CONSTRUCTOR));
         }
 
         if (outputFields != null) {
-            config.setMeasureNames(outputFields.split(","));
+            config.setMetricNames(Arrays.asList(outputFields));
         }
         return config;
     }
