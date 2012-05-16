@@ -12,7 +12,7 @@
     <module>ps4j-core</module>
     <module>ps4j-cli</module>
   </modules>
-  
+
   <developers>
     <developer>
       <id>adeshmukh</id>
@@ -24,12 +24,12 @@
       <timezone>-8</timezone>
     </developer>
   </developers>
-  
+
   <scm>
     <connection>scm:git:git@github.com/adeshmukh/${project.name}.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/adeshmukh/${project.name}.git</developerConnection>
   </scm>
-  
+
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -37,7 +37,7 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-  
+
   <distributionManagement>
     <site>
       <id>github-pages</id>
@@ -45,23 +45,34 @@
     </site>
   </distributionManagement>
 
+  <properties>
+    <slf4j.version>1.6.4</slf4j.version>
+    <guava.version>12.0</guava.version>
+    <args4j.version>2.0.16</args4j.version>
+    <maven-compiler-plugin.version>2.3.0</maven-compiler-plugin.version>
+  </properties>
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>11.0.2</version>
+        <version>${guava.version}</version>
       </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>args4j</groupId>
-      <artifactId>args4j</artifactId>
-      <version>2.0.16</version>
-    </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-nop</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>args4j</groupId>
+        <artifactId>args4j</artifactId>
+        <version>${args4j.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <build>
@@ -70,7 +81,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>2.3.2</version>
+          <version>${maven-compiler-plugin.version}</version>
           <configuration>
             <source>1.6</source>
             <target>1.6</target>

@@ -6,8 +6,8 @@
       <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
     </layout>
   </appender>
-  <logger name="com.github.adeshmukh" level="DEBUG"/>
-  <root level="WARN">
+  <logger name="com.github.adeshmukh" level="DEBUG" />
+  <root level="${root-level:-WARN}">
     <appender-ref ref="LOG" />
   </root>
 </configuration>

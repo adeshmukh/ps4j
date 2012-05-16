@@ -23,7 +23,7 @@ public class Record {
         measures = newTreeMap();
 	}
 
-	public static Record newInstance() {
+	public static Record create() {
 		return new Record();
 	}
 

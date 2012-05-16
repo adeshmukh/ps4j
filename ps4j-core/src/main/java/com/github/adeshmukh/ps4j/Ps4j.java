@@ -1,7 +1,6 @@
 package com.github.adeshmukh.ps4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.Collections2.filter;
 import static com.google.common.collect.Collections2.transform;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.filterKeys;
@@ -11,7 +10,6 @@ import static java.util.concurrent.Executors.newFixedThreadPool;
 import java.lang.management.ManagementFactory;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -31,6 +29,7 @@ import sun.jvmstat.monitor.VmIdentifier;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -45,14 +44,15 @@ public class Ps4j {
     private final Predicate<String> METRICS_FILTER = new Predicate<String>() {
         @Override
         public boolean apply(String input) {
-            return config.getMetricNames() == null || Arrays.asList(config.getMetricNames()).contains(input);
+            return config.hasMetric(input);
         }
     };
 
-    private final Function<Record, Record> RECORD_STRAINER = new Function<Record, Record>() {
+    private final Function<Record, Record> RECORD_FIELD_STRAINER = new Function<Record, Record>() {
         @Override
         public Record apply(Record input) {
-            return Record.newInstance().addAll(filterKeys(input.getMeasures(), METRICS_FILTER));
+
+            return Record.create().addAll(filterKeys(input.getMeasures(), METRICS_FILTER));
         }
     };
 
@@ -97,7 +97,7 @@ public class Ps4j {
 
     private MonitoredHost monitoredHost;
     private Ps4jConfig config;
-    private Collection<Record> records;
+    private Iterable<Record> records;
 
     public static enum Ps4jAction {
         OPTIONS, MEASURE
@@ -120,8 +120,8 @@ public class Ps4j {
             builder.addAll(meter.supportedMetrics());
         }
         Set<Metric<?>> retval = builder.build();
-        String[] metricNames = config.getMetricNames();
-        if (metricNames != null && metricNames.length > 0) {
+        List<String> metricNames = config.getMetricNames();
+        if (!metricNames.isEmpty()) {
             List<String> badMetrics = newArrayList(metricNames);
             badMetrics.removeAll(transform(retval, GET_NAME));
             if (!badMetrics.isEmpty()) {
@@ -131,7 +131,7 @@ public class Ps4j {
         return retval;
     }
 
-    public Collection<Record> measure() throws Ps4jException {
+    public Iterable<Record> measure() throws Ps4jException {
         options(); // validate config.getMetricNames()
 
         ExecutorService threadPool = null;
@@ -151,10 +151,11 @@ public class Ps4j {
             }
 
             // 3. Prepare and display output
-            records = transform(
-                    filter(transform(results, FUTURE_TO_RECORD_TRANSFORMER), NOOP_RECORDS_FILTER)
-                    , RECORD_STRAINER);
-            log.debug("Available records: [{}]", records.size());
+            records = FluentIterable.from(results)
+                    .transform(FUTURE_TO_RECORD_TRANSFORMER)
+                    .filter(NOOP_RECORDS_FILTER)
+                    .transform(RECORD_FIELD_STRAINER);
+            log.debug("Available records: [{}]", Iterables.size(records));
         } catch (Exception e) {
             throw new Ps4jException(e);
         } finally {

@@ -3,5 +3,6 @@ target
 .classpath
 .project
 .settings
-clean*install.log
+.DS_Store
+*.log
 ghpush

@@ -1,6 +1,14 @@
 package com.github.adeshmukh.ps4j;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import javax.annotation.Nonnull;
+
+import com.google.common.collect.Sets;
 
 /**
  * @author adeshmukh
@@ -18,13 +26,16 @@ public final class Ps4jConfig {
 
     private Iterable<? extends Meter> meters;
 
-    private String[] measureNames;
+    private List<String> metricNames = Collections.emptyList();
+
+    private Set<String> metricNamesSet = Collections.emptySet();
 
     public Iterable<? extends Meter> getMeters() {
         return meters;
     }
 
-    public void setMeters(Iterable<? extends Meter> meters) {
+    public void setMeters(@Nonnull Iterable<? extends Meter> meters) {
+        checkArgument(meters != null, "meters cannot be null");
         this.meters = meters;
     }
 
@@ -32,7 +43,8 @@ public final class Ps4jConfig {
         return this.hostname;
     }
 
-    public void setHostname(String hostname) {
+    public void setHostname(@Nonnull String hostname) {
+        checkArgument(hostname != null, "Hostname cannot be null");
         this.hostname = hostname;
     }
 
@@ -48,15 +60,21 @@ public final class Ps4jConfig {
      * @param cf
      */
     public void setConcurrencyFactor(double cf) {
-        Preconditions.checkArgument(cf >= 0 && cf <= 1, "concurrencyFactor must be in the range (0,1)");
+        checkArgument(cf >= 0 && cf <= 1, "concurrencyFactor must be in the range (0,1)");
         this.concurrencyFactor = cf;
     }
 
-    public String[] getMetricNames() {
-        return measureNames;
+    public List<String> getMetricNames() {
+        return metricNames;
     }
 
-    public void setMeasureNames(String[] measureNames) {
-        this.measureNames = measureNames;
+    public void setMetricNames(@Nonnull List<String> outputFields) {
+        checkArgument(outputFields != null, "outputFields cannot be set to null value");
+        this.metricNames = Collections.unmodifiableList(outputFields);
+        this.metricNamesSet = Sets.newHashSet(outputFields);
+    }
+
+    public boolean hasMetric(String input) {
+        return metricNamesSet != null && metricNamesSet.contains(input);
     }
 }

@@ -45,7 +45,7 @@ public class Ps4jTask implements Callable<Record> {
         try {
             vm = monitoredHost.getMonitoredVm(vmId);
             if (vm != null) {
-				Record record = Record.newInstance();
+				Record record = Record.create();
 				for (Meter ms : meters) {
                     Collection<? extends Measure<?>> measures = ms.measureData(vm);
 					// TODO adeshmukh: qualify the map key with Meter's class
