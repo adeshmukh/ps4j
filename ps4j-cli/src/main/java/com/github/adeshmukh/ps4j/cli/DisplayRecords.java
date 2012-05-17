@@ -14,8 +14,12 @@ import java.util.SortedMap;
 
 import com.github.adeshmukh.ps4j.Measure;
 import com.github.adeshmukh.ps4j.Record;
+<<<<<<< HEAD
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
+=======
+import com.google.common.collect.ImmutableList;
+>>>>>>> 142b46c4c9144d553494fc1ed6a78ca1dbf8cd00
 import com.google.common.collect.Iterables;
 
 public class DisplayRecords implements Iterable<String[]> {

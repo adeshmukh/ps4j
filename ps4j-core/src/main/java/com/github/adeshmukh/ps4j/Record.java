@@ -24,11 +24,14 @@ public class Record {
         measures = Lists.newArrayList();
 	}
 
+<<<<<<< HEAD
     /**
      * Factory method.
      *
      * @return
      */
+=======
+>>>>>>> 142b46c4c9144d553494fc1ed6a78ca1dbf8cd00
 	public static Record create() {
 		return new Record();
 	}
