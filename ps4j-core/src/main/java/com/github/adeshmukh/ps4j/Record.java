@@ -1,9 +1,10 @@
 package com.github.adeshmukh.ps4j;
 
-import static com.google.common.collect.Maps.newTreeMap;
+import java.util.Collection;
 
-import java.util.Map;
-import java.util.SortedMap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 /**
  * Record contains the Measures for a single VM.
@@ -17,23 +18,40 @@ public class Record {
      */
     public static final Record NOOP = new Record();
 
-    private SortedMap<String, Measure<?>> measures;
+    private Collection<Measure<?>> measures;
 
 	private Record() {
-        measures = newTreeMap();
+        measures = Lists.newArrayList();
 	}
 
+    /**
+     * Factory method.
+     *
+     * @return
+     */
 	public static Record create() {
 		return new Record();
 	}
 
-    public Record addAll(Map<String, ? extends Measure<?>> measures) {
-        this.measures.putAll(measures);
+    /**
+     * Add a Collection of Measure instances to this record. Expected to be invoked by a Meter.
+     *
+     * @param measures
+     * @return
+     */
+    public Record addAll(Iterable<? extends Measure<?>> measures) {
+        Iterables.addAll(this.measures, measures);
         return this;
 	}
 
-    public SortedMap<String, ? extends Measure<?>> getMeasures() {
-        return newTreeMap(measures);
+    /**
+     * Return an ImmutableList of Measures in this record. Expected to be invoked after all Meters have finished adding
+     * the measures.
+     * 
+     * @return
+     */
+    public ImmutableList<? extends Measure<?>> getMeasures() {
+        return ImmutableList.copyOf(measures);
     }
 
     @Override

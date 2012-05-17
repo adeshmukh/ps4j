@@ -3,7 +3,6 @@ package com.github.adeshmukh.ps4j;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Collections2.transform;
 import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Maps.filterKeys;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
@@ -41,18 +40,19 @@ import com.google.common.collect.Iterables;
 @SuppressWarnings("restriction")
 public class Ps4j {
 
-    private final Predicate<String> METRICS_FILTER = new Predicate<String>() {
+    // Ignoring parameterization of Measure since using the non-parameterized aspect of Measure
+    @SuppressWarnings("rawtypes")
+    private final Predicate<Measure> METRICS_FILTER = new Predicate<Measure>() {
         @Override
-        public boolean apply(String input) {
-            return config.hasMetric(input);
+        public boolean apply(Measure input) {
+            return config.hasMetric(input.getMetric().getName());
         }
     };
 
     private final Function<Record, Record> RECORD_FIELD_STRAINER = new Function<Record, Record>() {
         @Override
         public Record apply(Record input) {
-
-            return Record.create().addAll(filterKeys(input.getMeasures(), METRICS_FILTER));
+            return Record.create().addAll(Iterables.filter(input.getMeasures(), METRICS_FILTER));
         }
     };
 
