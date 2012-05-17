@@ -49,11 +49,7 @@
     <slf4j.version>1.6.4</slf4j.version>
     <guava.version>12.0</guava.version>
     <args4j.version>2.0.16</args4j.version>
-<<<<<<< HEAD
     <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
-=======
-    <maven-compiler-plugin.version>2.3.0</maven-compiler-plugin.version>
->>>>>>> 142b46c4c9144d553494fc1ed6a78ca1dbf8cd00
   </properties>
   <dependencyManagement>
     <dependencies>
