@@ -44,25 +44,15 @@ public class Ps4j {
     @SuppressWarnings("rawtypes")
     private final Predicate<Measure> METRICS_FILTER = new Predicate<Measure>() {
         @Override
-<<<<<<< HEAD
         public boolean apply(Measure input) {
             return config.hasMetric(input.getMetric().getName());
-=======
-        public boolean apply(String input) {
-            return config.hasMetric(input);
->>>>>>> 142b46c4c9144d553494fc1ed6a78ca1dbf8cd00
         }
     };
 
     private final Function<Record, Record> RECORD_FIELD_STRAINER = new Function<Record, Record>() {
         @Override
         public Record apply(Record input) {
-<<<<<<< HEAD
             return Record.create().addAll(Iterables.filter(input.getMeasures(), METRICS_FILTER));
-=======
-
-            return Record.create().addAll(filterKeys(input.getMeasures(), METRICS_FILTER));
->>>>>>> 142b46c4c9144d553494fc1ed6a78ca1dbf8cd00
         }
     };
 
