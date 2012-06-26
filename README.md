@@ -11,9 +11,7 @@ Build
 =====
 Say $PS4J_SRC refers to the location where the source was checked out:
 >  cd $PS4J_SRC/ps4j-cli
-> mvn assembly:assembly
 
-This should generate the distro in $PS4J_HOME/ps4j-cli/target/ps4j-cli-1.0.0-SNAPSHOT-bin.tar.gz
 
 Usage
 =====
