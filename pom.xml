@@ -50,6 +50,7 @@
     <guava.version>12.0</guava.version>
     <args4j.version>2.0.16</args4j.version>
     <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
+    <plexus.version>2.4</plexus.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -72,6 +73,11 @@
         <groupId>args4j</groupId>
         <artifactId>args4j</artifactId>
         <version>${args4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.plexus</groupId>
+        <artifactId>plexus-classworlds</artifactId>
+        <version>${plexus.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -104,6 +110,12 @@
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptor>src/main/assembly/bin.xml</descriptor>
         </configuration>
       </plugin>
     </plugins>

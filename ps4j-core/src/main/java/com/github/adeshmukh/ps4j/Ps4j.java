@@ -99,13 +99,8 @@ public class Ps4j {
     private Ps4jConfig config;
     private Iterable<Record> records;
 
-    public static enum Ps4jAction {
-        OPTIONS, MEASURE
-    }
-
     public Ps4j(Ps4jConfig config) throws Ps4jException {
         checkArgument(config != null, "config cannot be null");
-
         try {
             this.config = config;
             monitoredHost = MonitoredHost.getMonitoredHost(config.getHostname());
@@ -142,7 +137,6 @@ public class Ps4j {
 
             // 2. Execute in threadpool
             int numThreads = (int) (vmIds.size() * config.getConcurrencyFactor());
-            log.debug("Num threads: [{}]", numThreads);
             threadPool = newFixedThreadPool(numThreads);
             List<Future<Record>> results = new ArrayList<Future<Record>>(vmIds.size());
             for (VmIdentifier vmId : vmIds) {

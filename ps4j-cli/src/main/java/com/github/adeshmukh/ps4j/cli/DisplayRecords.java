@@ -24,6 +24,7 @@ public class DisplayRecords implements Iterable<String[]> {
 
     private static final char PADCHAR = ' ';
 
+    @SuppressWarnings("rawtypes")
     private static final Function<Measure, String> MEASURE_NAME = new Function<Measure, String>() {
 
         @Override
@@ -43,6 +44,7 @@ public class DisplayRecords implements Iterable<String[]> {
             return;
         }
         // get the measures in the first record to size the record
+        @SuppressWarnings("rawtypes")
         Iterable<? extends Measure> canonicalMeasures = records.iterator().next().getMeasures();
         orderedKeys = FluentIterable.from(canonicalMeasures).transform(MEASURE_NAME);
         numCols = Iterables.size(orderedKeys);
@@ -53,6 +55,7 @@ public class DisplayRecords implements Iterable<String[]> {
 
         // populate colWidths
         for (Record record : records) {
+            @SuppressWarnings("rawtypes")
             SortedMap<String, Measure> measures = newTreeMap();
             measures.putAll(uniqueIndex(record.getMeasures(), MEASURE_NAME));
             int i = 0;
@@ -73,6 +76,7 @@ public class DisplayRecords implements Iterable<String[]> {
 
         // populate vals in displayValues
         for (Record record : records) {
+            @SuppressWarnings("rawtypes")
             SortedMap<String, Measure> measures = newTreeMap();
             measures.putAll(uniqueIndex(record.getMeasures(), MEASURE_NAME));
             String[] vals = new String[numCols];
