@@ -57,7 +57,7 @@ public class HotspotMeter implements Meter {
         @Override
         public String apply(Monitor input) {
             String s = String.valueOf(input.getValue());
-            return s; // TODO adeshmukh: escape/quote for whitespace
+            return s;
         }
     };
 

@@ -34,9 +34,9 @@ public class Ps4jTask implements Callable<Record> {
             vm = monitoredHost.getMonitoredVm(vmId);
             if (vm != null) {
 				Record record = Record.create();
-				for (Meter ms : meters) {
+				for (Meter meter : meters) {
                     // TODO adeshmukh: qualify the map key with the Meter class that contributes it
-                    record.addAll(ms.measureData(vm));
+                    record.addAll(meter.measureData(vm));
 				}
 				return record;
             }

@@ -47,7 +47,7 @@
 
   <properties>
     <slf4j.version>1.6.4</slf4j.version>
-    <guava.version>12.0</guava.version>
+    <guava.version>15.0</guava.version>
     <args4j.version>2.0.16</args4j.version>
     <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
     <plexus.version>2.4</plexus.version>
@@ -107,10 +107,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>

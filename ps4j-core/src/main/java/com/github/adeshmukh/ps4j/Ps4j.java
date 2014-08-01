@@ -171,13 +171,15 @@ public class Ps4j {
 
             Integer currentVmId = currentVmId();
 
-            @SuppressWarnings("unchecked")
-            Set<Number> vmIdNums = monitoredHost.activeVms();
+            Set<Integer> vmIdNums = monitoredHost.activeVms();
             vmIds = new ArrayList<VmIdentifier>(vmIdNums.size());
             for (Number vmId : vmIdNums) {
+
+                // skip reporting for the ps4j process itself
                 if (currentVmId.intValue() == vmId.intValue()) {
                     continue;
                 }
+
                 VmIdentifier vmIdentifier = new VmIdentifier(format(VMID_TEMPLATE, vmId));
                 vmIds.add(vmIdentifier);
             }
